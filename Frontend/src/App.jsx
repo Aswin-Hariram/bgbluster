@@ -1,17 +1,9 @@
-import { useState } from "react";
-import imag from "./assets/img.svg";
-import imag1 from "./assets/image1.svg";
-import imag2 from "./assets/image2.svg";
-import imag3 from "./assets/image3.svg";
-import imag4 from "./assets/image4.svg";
-import cloud from "./assets/cloud.svg";
-import man from "./assets/man.svg";
-import women from "./assets/women.svg";
-import Footer from "./footer";
+import React from "react";
 import Header from "./Header";
 import Hero from "./HeroSection";
 import HowItWorks from "./HowItWorks";
 import DND from "./DND";
+import Footer from "./footer";
 
 
 export default function BackgroundRemovalApp() {
