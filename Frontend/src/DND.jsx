@@ -23,7 +23,7 @@ const DND = () => {
     const [processingStatus, setProcessingStatus] = useState({});
     
     // API endpoint configuration
-    const API_URL = "http://127.0.0.1:8001";
+    const API_URL = import.meta.env.BASE_URL
 
     const handleDragEnter = (e) => {
         e.preventDefault();
