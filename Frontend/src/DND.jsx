@@ -7,7 +7,6 @@ import add from "./assets/add.svg";
 import retry from "./assets/retry.svg";
 import edit from "./assets/edit.svg";
 import cloud from "./assets/cloud.svg";
-import processing from "./assets/processing.svg";
 import right from "./assets/right.svg";
 import down from "./assets/down.svg";
 import back from "./assets/back.svg";
