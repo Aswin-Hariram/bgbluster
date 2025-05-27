@@ -7,12 +7,12 @@ from PIL import Image
 import io
 import torch
 from torchvision import transforms
-from transformers import AutoModelForImageSegmentation
-from loadimg import load_img
+from rembg import remove, new_session
 import os
 import tempfile
 import zipfile
 import logging
+import numpy as np
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -26,42 +26,59 @@ logging.basicConfig(level=logging.INFO)
 # Set PyTorch matmul precision
 torch.set_float32_matmul_precision("high")
 
-# Load the model
-try:
-    app.logger.info("Loading BiRefNet model...")
-    birefnet = AutoModelForImageSegmentation.from_pretrained(
-        "ZhengPeng7/BiRefNet", trust_remote_code=True
-    )
-    birefnet.to("cpu")
-    app.logger.info("Model loaded successfully.")
-except Exception as e:
-    app.logger.error(f"Error loading model: {str(e)}")
-    birefnet = None
+# Initialize the background remover
+def init_bg_remover():
+    try:
+        # Just verify rembg is importable
+        from rembg import new_session, remove
+        app.logger.info("Background remover initialized successfully")
+        return True
+    except Exception as e:
+        app.logger.error(f"Failed to initialize background remover: {str(e)}")
+        return False
 
-# Define image transforms
-transform_image = transforms.Compose([
-    transforms.Resize((1024, 1024)),
-    transforms.ToTensor(),
-    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-])
+# Check if background remover is available
+bg_remover_available = init_bg_remover()
+
+@app.route('/health')
+def health_check():
+    """Health check endpoint"""
+    try:
+        if not bg_remover_available:
+            return jsonify({"status": "error", "message": "Background remover not available"}), 500
+        return jsonify({
+            "status": "ok",
+            "background_remover_available": bg_remover_available,
+            "service": "Background Removal Service"
+        })
+    except Exception as e:
+        app.logger.error(f"Health check failed: {str(e)}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 # Function to process an image and return transparent background
 def process(image):
-    if birefnet is None:
-        raise RuntimeError("Model not loaded.")
+    if not bg_remover_available:
+        raise RuntimeError("Background remover not available.")
     
-    image_size = image.size
-    input_images = transform_image(image).unsqueeze(0).to("cpu")
-    
-    with torch.no_grad():
-        preds = birefnet(input_images)[-1].sigmoid().cpu()
-    
-    pred = preds[0].squeeze()
-    pred_pil = transforms.ToPILImage()(pred)
-    mask = pred_pil.resize(image_size)
-    
-    image.putalpha(mask)
-    return image
+    try:
+        # Convert image to RGBA if not already
+        if image.mode != 'RGBA':
+            image = image.convert('RGBA')
+        
+        # Remove background
+        result = remove(
+            image,
+            session=new_session("u2net"),  # Using u2net model which is good for general purpose
+            alpha_matting=True,
+            alpha_matting_foreground_threshold=240,
+            alpha_matting_background_threshold=10,
+            alpha_matting_erode_size=10
+        )
+        
+        return result
+    except Exception as e:
+        app.logger.error(f"Error in background removal: {str(e)}")
+        raise RuntimeError(f"Failed to remove background: {str(e)}")
 
 # API Endpoints
 
@@ -177,5 +194,6 @@ def hello():
 
 # No debug mode here
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))  # Default to 8001 if not set
-    app.run(host="0.0.0.0", port=port)
+    port = int(os.environ.get("PORT", 8000))
+    app.logger.info(f"Starting server on port {port}...")
+    app.run(host="0.0.0.0", port=port, debug=True)

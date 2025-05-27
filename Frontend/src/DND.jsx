@@ -23,7 +23,7 @@ const DND = () => {
     const [processingStatus, setProcessingStatus] = useState({});
     
     // API endpoint configuration
-    const API_URL = import.meta.env.BASE_URL
+    const API_URL = "http://localhost:8000"
 
     const handleDragEnter = (e) => {
         e.preventDefault();
