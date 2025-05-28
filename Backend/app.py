@@ -192,8 +192,6 @@ def hello():
         "status": "success"
     }), 200
 
-# No debug mode here
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
-    app.logger.info(f"Starting server on port {port}...")
-    app.run(host="0.0.0.0", port=port, debug=True)
+    port = int(os.environ.get("PORT", 8001))  # Default to 8000 for local dev
+    app.run(host="0.0.0.0", port=port)
