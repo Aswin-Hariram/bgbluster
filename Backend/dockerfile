@@ -40,7 +40,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app \
     U2NET_HOME=/app/.u2net \
-    PORT=8000
+    PORT=8001
 
 # Create a directory for models
 RUN mkdir -p /app/.u2net
@@ -49,11 +49,11 @@ RUN mkdir -p /app/.u2net
 COPY . .
 
 # Expose port
-EXPOSE 8000
+EXPOSE 8001
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:8001/health || exit 1
 
 # Command to run the application
-CMD ["python", "app.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8001", "app:app"]
