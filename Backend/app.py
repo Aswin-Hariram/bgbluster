@@ -185,7 +185,7 @@ def process_file_path():
         app.logger.error(f"Error in /file: {str(e)}")
         return jsonify({"error": "Processing failed"}), 500
 
-@app.route('/hello', methods=['GET'])
+@app.route('/', methods=['GET'])
 def hello():
     return jsonify({
         "message": "Hello from BGBluster API!",
