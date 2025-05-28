@@ -193,5 +193,7 @@ def hello():
     }), 200
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8001))  # Default to 8000 for local dev
-    app.run(host="0.0.0.0", port=port)
+    port = int(os.environ.get("PORT", 8001))  # Default to 8001 for local dev
+    host = os.environ.get("HOST", "0.0.0.0")
+    app.logger.info(f"Starting server on {host}:{port}")
+    app.run(host=host, port=port, debug=False)
