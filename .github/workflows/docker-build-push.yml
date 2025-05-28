@@ -1,0 +1,63 @@
+name: Docker Build and Push
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
+  DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      
+      - name: Build and push backend
+        uses: docker/build-push-action@v4
+        with:
+          context: ./Backend
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/bgbluster-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Build and push frontend
+        uses: docker/build-push-action@v4
+        with:
+          context: ./Frontend
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/bgbluster-frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Update README with image info
+        run: |
+          echo "## Docker Images" >> README.md
+          echo "\n### Backend" >> README.md
+          echo "- **Docker Hub:** [${DOCKER_HUB_USERNAME}/bgbluster-backend](https://hub.docker.com/r/${DOCKER_HUB_USERNAME}/bgbluster-backend)" >> README.md
+          echo "- Pull Command: \`docker pull ${DOCKER_HUB_USERNAME}/bgbluster-backend:latest\`" >> README.md
+          echo "\n### Frontend" >> README.md
+          echo "- **Docker Hub:** [${DOCKER_HUB_USERNAME}/bgbluster-frontend](https://hub.docker.com/r/${DOCKER_HUB_USERNAME}/bgbluster-frontend)" >> README.md
+          echo "- Pull Command: \`docker pull ${DOCKER_HUB_USERNAME}/bgbluster-frontend:latest\`" >> README.md
+          
+      - name: Commit README changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "docs: Update README with Docker image information"
