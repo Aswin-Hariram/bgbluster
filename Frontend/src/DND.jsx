@@ -22,8 +22,8 @@ const DND = () => {
     const [selectionMode, setSelectionMode] = useState(true);
     const [processingStatus, setProcessingStatus] = useState({});
     
-    // API endpoint configuration
-    const API_URL = "http://localhost:8000"
+    // API endpoint configuration from environment variables
+    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
 
     const handleDragEnter = (e) => {
         e.preventDefault();
